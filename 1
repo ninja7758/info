@@ -1121,6 +1121,103 @@ input :- 
 4
 7
 
+
+11.  Write a program to compute the finish time, turnaround time and waiting time for the 
+Priority (Preemptive and Non Preemptive) 
+
+#include <stdio.h>
+
+#define MAX 10
+
+struct Process {
+    int id;
+    int arrival;
+    int burst;
+    int priority;
+    int remaining_time;
+    int finish_time;
+    int turnaround_time;
+    int waiting_time;
+};
+
+void calculateTimes(struct Process processes[], int n, int preemptive) {
+    int completed = 0, current_time = 0, min_priority = 10000;
+    int shortest = -1, finish_time;
+    int is_completed[MAX] = {0};
+
+    while (completed != n) {
+        // Select process based on priority
+        for (int i = 0; i < n; i++) {
+            if (processes[i].arrival <= current_time && !is_completed[i]) {
+                if ((preemptive && processes[i].remaining_time > 0 && (shortest == -1 || processes[i].priority < processes[shortest].priority)) || 
+                    (!preemptive && processes[i].remaining_time == processes[i].burst && (shortest == -1 || processes[i].priority < processes[shortest].priority))) {
+                    shortest = i;
+                }
+            }
+        }
+
+        if (shortest == -1) {
+            current_time++;
+            continue;
+        }
+
+        // Preemptive execution
+        if (preemptive) {
+            processes[shortest].remaining_time--;
+            if (processes[shortest].remaining_time == 0) {
+                is_completed[shortest] = 1;
+                finish_time = current_time + 1;
+                processes[shortest].finish_time = finish_time;
+                processes[shortest].turnaround_time = finish_time - processes[shortest].arrival;
+                processes[shortest].waiting_time = processes[shortest].turnaround_time - processes[shortest].burst;
+                completed++;
+            }
+            current_time++;
+        } else { // Non-Preemptive execution
+            current_time += processes[shortest].burst;
+            finish_time = current_time;
+            processes[shortest].finish_time = finish_time;
+            processes[shortest].turnaround_time = finish_time - processes[shortest].arrival;
+            processes[shortest].waiting_time = processes[shortest].turnaround_time - processes[shortest].burst;
+            is_completed[shortest] = 1;
+            completed++;
+        }
+        shortest = -1;
+    }
+}
+
+void displayResults(struct Process processes[], int n) {
+    printf("\nProcess ID\tArrival Time\tBurst Time\tPriority\tFinish Time\tTurnaround Time\tWaiting Time\n");
+    for (int i = 0; i < n; i++) {
+        printf("%d\t\t%d\t\t%d\t\t%d\t\t%d\t\t%d\t\t%d\n", processes[i].id, processes[i].arrival, processes[i].burst,
+               processes[i].priority, processes[i].finish_time, processes[i].turnaround_time, processes[i].waiting_time);
+    }
+}
+
+int main() {
+    struct Process processes[MAX];
+    int n, choice;
+
+    printf("Enter the number of processes: ");
+    scanf("%d", &n);
+
+    for (int i = 0; i < n; i++) {
+        processes[i].id = i + 1;
+        printf("Enter Arrival Time, Burst Time, and Priority of process %d: ", i + 1);
+        scanf("%d %d %d", &processes[i].arrival, &processes[i].burst, &processes[i].priority);
+        processes[i].remaining_time = processes[i].burst;
+    }
+
+    printf("Choose Scheduling Mode:\n1. Preemptive Priority\n2. Non-Preemptive Priority\nEnter choice: ");
+    scanf("%d", &choice);
+
+    calculateTimes(processes, n, choice == 1);
+    displayResults(processes, n);
+
+    return 0;
+}
+
+
 12.	Write a program to compute the finish time, turnaround time and waiting time for the
  Round robin 
 
